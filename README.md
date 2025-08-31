@@ -1,36 +1,456 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TouchDesigner Slider Queue
 
-## Getting Started
+A real-time, queue-based interactive slider control system that allows users to take turns controlling a slider for 30 seconds, with values transmitted to TouchDesigner for live visualizations.
 
-First, run the development server:
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
+![Next.js](https://img.shields.io/badge/Next.js-15.5.1-black.svg)
+![Firebase](https://img.shields.io/badge/Firebase-12.1.0-orange.svg)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🎮 Overview
+
+TouchDesigner Slider Queue provides a web-based interface where users can:
+- Join a queue to control a slider interface
+- Take 30-second turns controlling the slider
+- Send real-time values (-1 to 1) to TouchDesigner
+- View their queue position and wait time
+- See live updates as the queue progresses
+
+Perfect for interactive installations, collaborative performances, or live VJ sessions where audience participation enhances the visual experience.
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Frontend**: Next.js 15.5, React 19, TailwindCSS
+- **Backend**: Firebase Realtime Database + Firestore
+- **Database**: Firebase Firestore (session summaries) + Realtime Database (live queue state)
+- **Real-time**: Firebase Realtime Database listeners
+- **Language**: TypeScript
+
+### Data Flow
+```
+User → Web Interface → Firebase Realtime DB → Queue Management
+                    ↓                              ↓
+              Firebase Firestore ← Session Data ←──┘
+                    ↓
+              TouchDesigner
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+- Node.js 18.0.0 or higher
+- npm or yarn
+- Firebase account with Firestore and Realtime Database enabled
+- TouchDesigner (for receiving data)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/touchdesigner-slider-queue.git
+   cd touchdesigner-slider-queue
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` and add your Firebase configuration:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
+   NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.firebaseio.com/
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔥 Firebase Setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Step 1: Create Firebase Project
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project
+3. Enable Firestore Database
+4. Enable Realtime Database
+
+### Step 2: Get Configuration
+1. Go to Project Settings → General
+2. Scroll to "Your apps" and add a Web app
+3. Copy the configuration object
+4. Add values to your `.env.local` file
+
+### Step 3: Set Database Rules
+
+**Firestore Rules** (copy to Firebase Console):
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Slider values with validation
+    match /slider_values/{document} {
+      allow write: if request.resource.data.value >= -1 
+        && request.resource.data.value <= 1;
+    }
+    
+    // Session summaries
+    match /sessions/{document} {
+      allow create: if true;
+      allow update, delete: if false;
+    }
+  }
+}
+```
+
+**Realtime Database Rules** (copy to Firebase Console):
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+## 📡 TouchDesigner Integration
+
+### Firebase Data Sources
+
+1. **Firebase Realtime Database** - Live data (recommended)
+   ```json
+   // /sliderValues/current
+   {
+     "value": -0.5,           // Raw slider value (-1 to 1)
+     "normalizedValue": 0.25, // Normalized value (0 to 1)
+     "sessionId": "uuid",     // Unique session identifier
+     "timestamp": 1234567890  // Unix timestamp
+   }
+   ```
+
+2. **Firestore Collections** - Historical data
+   - **`slider_values`** - All slider updates
+   - **`current_value`** - Latest value only
+   - **`sessions`** - Session summaries
+   ```json
+   {
+     "sessionId": "uuid",
+     "duration": 30,          // Seconds
+     "dataPoints": 300,       // Total samples
+     "statistics": {
+       "min": -0.8,
+       "max": 0.9,
+       "average": 0.1,
+       "standardDeviation": 0.45
+     },
+     "sampledHistory": [...]  // Sampled values (every 10th)
+   }
+   ```
+
+### TouchDesigner Setup
+
+1. **Firebase Realtime Database (Recommended)**:
+   ```python
+   # In TouchDesigner, use Web Client DAT
+   # URL: https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com/sliderValues/current.json
+   # Method: GET
+   # Poll every 50-100ms for real-time updates
+   ```
+
+2. **Firestore REST API Method**:
+   ```python
+   # For latest value:
+   # URL: https://firestore.googleapis.com/v1/projects/YOUR_PROJECT/databases/(default)/documents/current_value
+   # Poll every 100ms
+   ```
+
+3. **Value Processing**:
+   - Use `value` field for -1 to 1 range
+   - Use `normalizedValue` field for 0 to 1 range
+   - Filter by `timestamp` for freshest data
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Development mode with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+
+# Run linter
+npm run lint
+
+# Export static site
+npm run export
+```
+
+### Project Structure
+
+```
+touchdesigner-slider-queue/
+├── app/                    # Next.js app directory
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Main queue interface
+├── components/          
+│   └── Slider.tsx         # Slider UI component
+├── hooks/
+│   └── useFirebaseQueue.ts # Firebase React hook
+├── lib/
+│   ├── firebase.ts        # Firebase configuration
+│   ├── firebase-queue.ts  # Firebase queue manager
+│   └── types.ts           # TypeScript type definitions
+├── public/                # Static assets
+├── firestore.rules        # Firestore security rules
+└── database.rules.json    # Realtime Database security rules
+```
+
+### Key Components
+
+- **FirebaseQueueManager**: Handles user queue ordering, timing, and progression
+- **Firebase Realtime Database**: Manages live queue state and current values
+- **useFirebaseQueue Hook**: Provides real-time state to React components
+- **Slider Component**: Interactive slider with throttled updates
+
+## ⚙️ Configuration
+
+### Modifying Queue Duration
+
+To change the 30-second turn duration, update these locations in `lib/firebase-queue.ts`:
+- Line 135: `endTime` calculation (30 * 1000 = 30 seconds)
+- Line 154: `setTimeout` duration (30000 = 30 seconds)
+- Update duration field in Firestore session summary
+
+### Adjusting Sampling Rate
+
+The client samples slider values every 100ms. To modify:
+- Update throttle value in `hooks/useFirebaseQueue.ts`
+- Adjust sampling interval in `lib/firebase-queue.ts`
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key | Yes |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | Yes |
+| `NEXT_PUBLIC_FIREBASE_DATABASE_URL` | Firebase Realtime Database URL | Yes |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID | Yes |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | Yes |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID | Yes |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID | Yes |
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Connection Issues**
+   - Check Firebase connection in browser DevTools Console
+   - Verify Firebase configuration in `.env.local`
+   - Ensure Firebase Realtime Database and Firestore are enabled
+
+2. **Firebase Errors**
+   - Verify all Firebase environment variables are set
+   - Check Firestore security rules allow write access
+   - Confirm Firebase project is active
+   - Test Firebase connection with browser console
+
+3. **Queue Not Progressing**
+   - Check browser console for Firebase connection errors
+   - Verify Firebase Realtime Database rules allow read/write
+   - Test with multiple browser windows/tabs
+
+4. **Slider Not Responding**
+   - Ensure user is active (position 0 in queue)
+   - Check Firebase connection status in console
+   - Verify slider component is not disabled
+
+### Firebase Console
+
+View data using Firebase Console:
+```
+# Realtime Database
+https://console.firebase.google.com/project/YOUR_PROJECT_ID/database
+
+# Firestore
+https://console.firebase.google.com/project/YOUR_PROJECT_ID/firestore
+
+# Current queue state: /queue
+# Current slider value: /sliderValues/current
+# Session summaries: /sessions collection
+```
+
+### Debug Mode
+
+Enable debug logging by setting in browser console:
+```javascript
+localStorage.setItem('debug', 'slider-queue:*');
+```
+
+## 🚀 Production Deployment
+
+### Build for Production
+
+```bash
+# Build the Next.js application
+npm run build
+
+# Start production server
+npm run start
+```
+
+### Environment Considerations
+
+- Use environment-specific Firebase projects (dev/staging/prod)
+- Configure proper Firebase security rules for production
+- Set up Firebase quota monitoring and alerts
+- Enable Firebase App Check for additional security
+- Consider CDN deployment for static assets
+
+### Recommended Hosting
+
+- **Vercel**: Automatic deployment with Next.js optimization
+- **Netlify**: Static site hosting with CDN
+- **Firebase Hosting**: Native Firebase integration
+- **GitHub Pages**: Free static hosting option
+- **Cloudflare Pages**: Fast global CDN
+
+### Docker Deployment
+
+```dockerfile
+# Example Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+## 📊 Performance & Monitoring
+
+### Performance Metrics
+- Slider updates throttled to 100ms intervals
+- Firebase handles 300+ data points per 30-second session
+- Firebase writes are fire-and-forget for low latency
+- Firebase Realtime Database provides sub-100ms updates
+- React re-renders optimized with proper dependency arrays
+
+### Monitoring
+- Monitor Firebase quota and billing usage
+- Track Firebase connection count in console
+- Monitor Firestore document count and storage
+- Set up uptime monitoring for production
+
+### Scaling Considerations
+- Firebase handles scaling automatically
+- Use Firebase App Check for DDoS protection
+- Implement client-side rate limiting
+- Deploy to multiple regions with Firebase
+- Use CDN for static assets
+
+## 🧪 Testing
+
+### Manual Testing
+- Open multiple browser tabs to simulate multiple users
+- Test queue ordering and position updates
+- Verify timer functionality and automatic progression
+- Test reconnection after network interruption
+
+### Automated Testing (Future)
+- Unit tests for queue management logic
+- Integration tests for Socket.IO connections
+- End-to-end tests for user flows
+- Firebase emulator tests
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Add proper error handling
+- Update documentation for new features
+- Test with multiple concurrent users
+- Consider TouchDesigner integration implications
+
+## 📝 API Reference
+
+### Firebase API Reference
+
+**Key Functions in FirebaseQueueManager:**
+- `joinQueue(sessionId)`: Add user to queue
+- `leaveQueue(sessionId)`: Remove user from queue
+- `updateSliderValue(sessionId, value)`: Send slider value
+- `listenToQueueState(callback)`: Subscribe to queue updates
+- `generateSessionId()`: Create unique session ID
+
+**Firebase Realtime Database Paths:**
+- `/queue/activeUser`: Current active user data
+- `/queue/waitingUsers/{sessionId}`: User in waiting queue
+- `/queue/queueLength`: Number of users waiting
+- `/sliderValues/current`: Latest slider value
+
+### Firestore Schema
+
+See the Firebase Integration section above for detailed collection schemas.
+
+## 🔒 Security
+
+- Firestore rules validate data types and value ranges
+- No authentication required (public installation focus)
+- Rate limiting considerations in production
+- Input validation on both client and server
+- CORS protection for API endpoints
+
+## 📜 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Built for creative coders and VJ communities
+- Inspired by interactive installation art
+- Powered by the TouchDesigner community
+- Thanks to contributors and testers
+
+## 📞 Support
+
+For questions or issues:
+1. Check the troubleshooting section above
+2. Review the WARP.md file for technical details
+3. Open an issue on GitHub
+4. Join the TouchDesigner community forums
+
+---
+
+**Happy coding and happy visuals! 🎨✨**

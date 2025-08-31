@@ -1,0 +1,39 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "queue": {
+      ".validate": true,
+      "activeUser": {
+        ".validate": "newData.hasChildren(['sessionId', 'startTime', 'endTime'])"
+      },
+      "waitingUsers": {
+        "$sessionId": {
+          ".validate": "newData.hasChildren(['sessionId', 'joinedAt']) && $sessionId == newData.child('sessionId').val()"
+        }
+      },
+      "queueLength": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    },
+    "sliderValues": {
+      ".validate": true,
+      "current": {
+        ".validate": "newData.hasChildren(['value', 'normalizedValue', 'sessionId', 'timestamp']) && newData.child('value').val() >= -1 && newData.child('value').val() <= 1 && newData.child('normalizedValue').val() >= 0 && newData.child('normalizedValue').val() <= 1"
+      },
+      "history": {
+        "$timestamp": {
+          ".validate": "newData.hasChildren(['value', 'sessionId', 'timestamp'])"
+        }
+      }
+    },
+    "sessions": {
+      "$sessionId": {
+        ".validate": "newData.hasChildren(['sessionId', 'startTime', 'endTime', 'duration']) && $sessionId == newData.child('sessionId').val()"
+      }
+    },
+    "systemState": {
+      ".validate": "newData.hasChildren(['lastUpdated'])"
+    }
+  }
+}

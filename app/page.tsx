@@ -1,103 +1,197 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useSocket } from '@/hooks/useFirebaseQueue';
+import { Slider } from '@/components/Slider';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    isConnected,
+    isActive,
+    queuePosition,
+    queueLength,
+    remainingTime,
+    joinQueue,
+    rejoinQueue,
+    sendSliderValue
+  } = useSocket();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [sliderValue, setSliderValue] = useState(0);
+  const [hasJoinedBefore, setHasJoinedBefore] = useState(false);
+
+  const handleSliderChange = (value: number) => {
+    setSliderValue(value);
+    if (isActive) {
+      sendSliderValue(value);
+    }
+  };
+
+  const handleJoinQueue = () => {
+    joinQueue();
+    setHasJoinedBefore(true);
+  };
+
+  const handleRejoinQueue = () => {
+    rejoinQueue();
+  };
+
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Determine UI state
+  const showJoinButton = !isActive && queuePosition === -1 && !hasJoinedBefore;
+  const showRejoinButton = !isActive && queuePosition === -1 && hasJoinedBefore;
+  const isInQueue = queuePosition > 0;
+  const isControlling = isActive && queuePosition === 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <header className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Interactive Slider Queue
+          </h1>
+          <p className="text-gray-600">
+            Take turns controlling the slider for Touch Designer visualizations
+          </p>
+        </header>
+
+        {/* Connection Status */}
+        <div className="mb-8">
+          <div className="flex items-center justify-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${
+              isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+            }`} />
+            <span className="text-sm text-gray-600">
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </span>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Content Area */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          {/* Status Banner */}
+          {isControlling && (
+            <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-semibold text-green-800">
+                    You&apos;re in control!
+                  </h2>
+                  <p className="text-sm text-green-700">
+                    Move the slider to send values to Touch Designer
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-green-800">
+                    {formatTime(remainingTime)}
+                  </div>
+                  <div className="text-xs text-green-700">remaining</div>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="mt-3 h-2 bg-green-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-green-500 transition-all duration-1000 ease-linear"
+                  style={{ width: `${(remainingTime / 30) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {isInQueue && (
+            <div className="mb-6 p-4 bg-blue-100 border border-blue-300 rounded-lg">
+              <h2 className="text-lg font-semibold text-blue-800">
+                You&apos;re in the queue
+              </h2>
+              <p className="text-sm text-blue-700">
+                Position: <span className="font-bold">{queuePosition}</span> of {queueLength}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Estimated wait: {formatTime(queuePosition * 30)}
+              </p>
+            </div>
+          )}
+
+          {/* Slider Component */}
+          <div className="mb-8">
+            <Slider
+              value={sliderValue}
+              onChange={handleSliderChange}
+              disabled={!isControlling}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center">
+            {showJoinButton && (
+              <button
+                onClick={handleJoinQueue}
+                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                Join Queue
+              </button>
+            )}
+
+            {showRejoinButton && (
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  Your turn has ended. Would you like to go again?
+                </p>
+                <button
+                  onClick={handleRejoinQueue}
+                  className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                >
+                  Rejoin Queue
+                </button>
+              </div>
+            )}
+
+            {(isInQueue || isControlling) && (
+              <div className="text-center">
+                <p className="text-gray-500 text-sm">
+                  {isControlling 
+                    ? 'Enjoy your turn! The slider values are being sent to Touch Designer.'
+                    : `Please wait for your turn. ${queuePosition - 1} ${queuePosition - 1 === 1 ? 'person' : 'people'} ahead of you.`
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Queue Information */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            Queue Information
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <div className="text-2xl font-bold text-gray-700">
+                {queueLength}
+              </div>
+              <div className="text-xs text-gray-500">People in Queue</div>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded">
+              <div className="text-2xl font-bold text-gray-700">
+                {isControlling ? 'Active' : queuePosition > 0 ? `#${queuePosition}` : 'Not Queued'}
+              </div>
+              <div className="text-xs text-gray-500">Your Status</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>Each person gets 30 seconds to control the slider.</p>
+          <p>Values range from -1 to 1 and are sent to Touch Designer in real-time.</p>
+        </div>
+      </div>
     </div>
   );
 }
