@@ -94,9 +94,33 @@ The system sends data to Firebase in two ways:
    - Includes: statistics (min/max/avg/stddev), sampled history (every 10th value), duration
 
 TouchDesigner should connect to:
-- **Realtime Database** `sliderValues/current` for live values
-- **Firestore** `current_value` collection for latest value with metadata
-- **Firestore** `sessions` collection for historical session data
+- **Realtime Database** `sliderValues/current` for live values (public access)
+- **Realtime Database** `queue` for queue state (public access)  
+- **Firestore** `sessions` collection for historical session data (requires authentication)
+- **Firestore** `current_value` collection for latest value with metadata (public access)
+
+### TouchDesigner Authentication
+
+**Setup Authentication:**
+```bash
+# Install Firebase Admin SDK
+npm install firebase-admin google-auth-library
+
+# Generate OAuth2 token for TouchDesigner
+npm run touchdesigner:token
+```
+
+**Firebase Security Rules:**
+- Public endpoints: Real-time slider values and queue state
+- Authenticated endpoints: Session history and system state
+- Service Account authentication via OAuth2 Bearer tokens
+
+**Web Client DAT Configuration:**
+- Use generated Bearer token in Authorization header for protected endpoints
+- 100ms refresh rate for real-time updates
+- Automatic token refresh (tokens expire after ~1 hour)
+
+See `TOUCHDESIGNER.md` for detailed integration guide.
 
 ## Key Technical Details
 

@@ -57,7 +57,7 @@ firebase-debug.log
 .runtimeconfig.json
 
 # Firebase generated files
-firestore.indexes.json
+# firestore.indexes.json (uncomment to ignore if auto-generated)
 
 # Legacy files (removed from current architecture)
 # SQLite database files (no longer used)
@@ -163,3 +163,16 @@ dist
 # Temporary folders
 tmp/
 temp/
+
+# TouchDesigner Authentication (CRITICAL - DO NOT COMMIT)
+# Firebase service account keys contain private keys and sensitive credentials
+firebase-admin-key.json
+service-account-key.json
+firebase-service-account.json
+
+# TouchDesigner generated config (contains access tokens)
+touchdesigner-config.json
+
+# Any other service account keys
+*-service-account*.json
+*-admin-key*.json

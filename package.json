@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export"
+    "export": "next export",
+    "clear-queue": "node scripts/clear-queue.js",
+    "touchdesigner:token": "node scripts/generate-touchdesigner-token.js"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
@@ -26,6 +28,8 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.1",
+    "firebase-admin": "^13.5.0",
+    "google-auth-library": "^10.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -2,18 +2,30 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
+    // Allow web app clients (unauthenticated) to read/write slider data
+    // This maintains current web app functionality while securing other data
+    match /slider_values/{document} {
+      allow read, write: if true; // Web app needs this for real-time updates
+    }
+    
+    match /current_value/{document} {
+      allow read, write: if true; // TouchDesigner and web app read access
+    }
+    
+    // Sessions data - write from web app, read requires authentication (TouchDesigner)
+    match /sessions/{sessionId} {
+      allow write: if true; // Web app can write session summaries
+      allow read: if request.auth != null; // Only authenticated users (TouchDesigner) can read
+    }
+    
+    // System state - requires authentication for both read/write
+    match /system/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Default deny all other collections
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 9, 30);
+      allow read, write: if false;
     }
   }
 }

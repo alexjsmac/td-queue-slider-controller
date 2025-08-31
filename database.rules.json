@@ -1,8 +1,12 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
+    // Default deny all access - specific rules below override this
+    ".read": false,
+    ".write": false,
     "queue": {
+      // Web app needs to read/write queue state for real-time updates
+      ".read": true,
+      ".write": true,
       ".validate": true,
       "activeUser": {
         ".validate": "newData.hasChildren(['sessionId', 'startTime', 'endTime'])"
@@ -17,6 +21,9 @@
       }
     },
     "sliderValues": {
+      // Web app writes, TouchDesigner reads (allow public read for real-time updates)
+      ".read": true,
+      ".write": true,
       ".validate": true,
       "current": {
         ".validate": "newData.hasChildren(['value', 'normalizedValue', 'sessionId', 'timestamp']) && newData.child('value').val() >= -1 && newData.child('value').val() <= 1 && newData.child('normalizedValue').val() >= 0 && newData.child('normalizedValue').val() <= 1"
@@ -28,11 +35,17 @@
       }
     },
     "sessions": {
+      // Web app writes session summaries, TouchDesigner reads with auth
+      ".read": "auth != null",
+      ".write": true,
       "$sessionId": {
         ".validate": "newData.hasChildren(['sessionId', 'startTime', 'endTime', 'duration']) && $sessionId == newData.child('sessionId').val()"
       }
     },
     "systemState": {
+      // Only authenticated users (TouchDesigner) can access system state
+      ".read": "auth != null",
+      ".write": "auth != null",
       ".validate": "newData.hasChildren(['lastUpdated'])"
     }
   }
