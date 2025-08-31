@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { firebaseQueueManager, QueueState, SliderData, ActiveUser } from '../lib/firebase-queue';
+import { firebaseQueueManager, QueueState, SliderData, ActiveUser } from '../lib/queue-manager';
 
 interface UseFirebaseQueueReturn {
   isConnected: boolean;

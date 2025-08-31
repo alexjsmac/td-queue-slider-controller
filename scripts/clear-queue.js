@@ -16,29 +16,29 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+const realtimeDb = getDatabase(app);
 
 async function clearQueue() {
   try {
     console.log('🧹 Clearing Firebase Realtime Database queue state...');
     
     // Clear queue data
-    const queueRef = ref(database, 'queue');
+    const queueRef = ref(realtimeDb, 'queue');
     await remove(queueRef);
     console.log('✅ Queue data cleared');
     
     // Clear current slider values
-    const sliderRef = ref(database, 'sliderValues');
+    const sliderRef = ref(realtimeDb, 'sliderValues');
     await remove(sliderRef);
     console.log('✅ Slider values cleared');
     
     // Clear system state
-    const systemRef = ref(database, 'systemState');
+    const systemRef = ref(realtimeDb, 'systemState');
     await remove(systemRef);
     console.log('✅ System state cleared');
     
     // Clear sessions (optional - you might want to keep this for analytics)
-    const sessionsRef = ref(database, 'sessions');
+    const sessionsRef = ref(realtimeDb, 'sessions');
     await remove(sessionsRef);
     console.log('✅ Sessions cleared');
     

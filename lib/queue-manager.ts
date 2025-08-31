@@ -1,7 +1,8 @@
-import { rtdb } from './firebase';
+import { realtimeDb } from './firebase-config';
 import { ref, set, remove, onValue, off, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import { v4 as uuidv4 } from 'uuid';
-import { updateSliderValue, sendSessionSummaryToFirestore } from './firebase';
+import { updateSliderValue } from './slider-service';
+import { saveSessionSummary } from './session-service';
 import type { 
   QueueUser, 
   ActiveUser, 
@@ -36,7 +37,7 @@ export class FirebaseQueueManager {
    */
   async joinQueue(sessionId: string): Promise<void> {
     try {
-      const userRef = ref(rtdb, `queue/waitingUsers/${sessionId}`);
+      const userRef = ref(realtimeDb, `queue/waitingUsers/${sessionId}`);
       await set(userRef, {
         sessionId,
         joinedAt: rtdbServerTimestamp(),
@@ -61,7 +62,7 @@ export class FirebaseQueueManager {
    */
   async leaveQueue(sessionId: string): Promise<void> {
     try {
-      const userRef = ref(rtdb, `queue/waitingUsers/${sessionId}`);
+      const userRef = ref(realtimeDb, `queue/waitingUsers/${sessionId}`);
       await remove(userRef);
       
       // Update queue length
@@ -80,7 +81,7 @@ export class FirebaseQueueManager {
   async updateSliderValue(sessionId: string, value: number): Promise<void> {
     try {
       // Check if user is currently active
-      const activeUserRef = ref(rtdb, 'queue/activeUser');
+      const activeUserRef = ref(realtimeDb, 'queue/activeUser');
       
       onValue(activeUserRef, async (snapshot) => {
         const activeUser = snapshot.val() as ActiveUser | null;
@@ -103,7 +104,7 @@ export class FirebaseQueueManager {
   async activateNextUser(): Promise<void> {
     try {
       // Get the first user from waiting queue (oldest joinedAt)
-      const waitingUsersRef = ref(rtdb, 'queue/waitingUsers');
+      const waitingUsersRef = ref(realtimeDb, 'queue/waitingUsers');
       
       onValue(waitingUsersRef, async (snapshot) => {
         const waitingUsers = snapshot.val() as { [sessionId: string]: QueueUser } | null;
@@ -123,7 +124,7 @@ export class FirebaseQueueManager {
           const endTime = now + 30 * 1000; // 30 seconds from now
 
           // Set as active user
-          const activeUserRef = ref(rtdb, 'queue/activeUser');
+          const activeUserRef = ref(realtimeDb, 'queue/activeUser');
           await set(activeUserRef, {
             sessionId: nextUser.sessionId,
             startTime: now,
@@ -158,7 +159,7 @@ export class FirebaseQueueManager {
    */
   async deactivateCurrentUser(): Promise<void> {
     try {
-      const activeUserRef = ref(rtdb, 'queue/activeUser');
+      const activeUserRef = ref(realtimeDb, 'queue/activeUser');
       
       // Get current active user before removing
       onValue(activeUserRef, async (snapshot) => {
@@ -172,7 +173,7 @@ export class FirebaseQueueManager {
           if (this.activeSessionData.length > 0) {
             const startTime = new Date(activeUser.startTime);
             const endTime = new Date();
-            await sendSessionSummaryToFirestore(activeUser.sessionId, startTime, endTime, this.activeSessionData);
+            await saveSessionSummary(activeUser.sessionId, startTime, endTime, this.activeSessionData);
           }
 
           // Remove active user
@@ -223,7 +224,7 @@ export class FirebaseQueueManager {
    */
   async checkAndActivateNext(): Promise<void> {
     try {
-      const activeUserRef = ref(rtdb, 'queue/activeUser');
+      const activeUserRef = ref(realtimeDb, 'queue/activeUser');
       
       onValue(activeUserRef, async (snapshot) => {
         const activeUser = snapshot.val() as ActiveUser | null;
@@ -245,13 +246,13 @@ export class FirebaseQueueManager {
    */
   private async updateQueueLength(): Promise<void> {
     try {
-      const waitingUsersRef = ref(rtdb, 'queue/waitingUsers');
+      const waitingUsersRef = ref(realtimeDb, 'queue/waitingUsers');
       
       onValue(waitingUsersRef, async (snapshot) => {
         const waitingUsers = snapshot.val();
         const count = waitingUsers ? Object.keys(waitingUsers).length : 0;
         
-        const queueLengthRef = ref(rtdb, 'queue/queueLength');
+        const queueLengthRef = ref(realtimeDb, 'queue/queueLength');
         await set(queueLengthRef, count);
       }, { onlyOnce: true });
       
@@ -264,7 +265,7 @@ export class FirebaseQueueManager {
    * Listen to queue state changes
    */
   listenToQueueState(callback: (queueState: QueueState) => void): () => void {
-    const queueRef = ref(rtdb, 'queue');
+    const queueRef = ref(realtimeDb, 'queue');
     
     onValue(queueRef, (snapshot) => {
       const data = snapshot.val() || {};
@@ -295,7 +296,7 @@ export class FirebaseQueueManager {
    * Listen to slider value changes
    */
   listenToSliderValues(callback: (sliderData: SliderData | null) => void): () => void {
-    const sliderRef = ref(rtdb, 'sliderValues/current');
+    const sliderRef = ref(realtimeDb, 'sliderValues/current');
     
     onValue(sliderRef, (snapshot) => {
       const data = snapshot.val() as SliderData | null;
@@ -333,7 +334,7 @@ export class FirebaseQueueManager {
    */
   async initializeQueue(): Promise<void> {
     try {
-      const activeUserRef = ref(rtdb, 'queue/activeUser');
+      const activeUserRef = ref(realtimeDb, 'queue/activeUser');
       
       onValue(activeUserRef, async (snapshot) => {
         const activeUser = snapshot.val() as ActiveUser | null;
