@@ -46,6 +46,10 @@ export class FirebaseQueueManager {
       await this.updateQueueLength();
       
       console.log(`User ${sessionId} joined queue`);
+      
+      // Check if we need to activate this user (if no one is currently active)
+      await this.checkAndActivateNext();
+      
     } catch (error) {
       console.error('Error joining queue:', error);
       throw error;
@@ -105,8 +109,8 @@ export class FirebaseQueueManager {
         const waitingUsers = snapshot.val() as { [sessionId: string]: QueueUser } | null;
         
         if (!waitingUsers || Object.keys(waitingUsers).length === 0) {
-          // No users in queue, remove active user
-          await this.deactivateCurrentUser();
+          // No users in queue, just return
+          console.log('No users in queue to activate');
           return;
         }
 
@@ -211,6 +215,28 @@ export class FirebaseQueueManager {
     if (this.valueCollectionInterval) {
       clearInterval(this.valueCollectionInterval);
       this.valueCollectionInterval = null;
+    }
+  }
+
+  /**
+   * Check if there's an active user, and if not, activate the next user
+   */
+  async checkAndActivateNext(): Promise<void> {
+    try {
+      const activeUserRef = ref(rtdb, 'queue/activeUser');
+      
+      onValue(activeUserRef, async (snapshot) => {
+        const activeUser = snapshot.val() as ActiveUser | null;
+        
+        // If no active user, try to activate the next user from queue
+        if (!activeUser) {
+          console.log('No active user found, attempting to activate next user');
+          await this.activateNextUser();
+        }
+      }, { onlyOnce: true });
+      
+    } catch (error) {
+      console.error('Error checking and activating next user:', error);
     }
   }
 

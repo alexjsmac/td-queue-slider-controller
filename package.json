@@ -10,6 +10,7 @@
     "export": "next export"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "firebase": "^12.1.0",
     "next": "15.5.1",
     "react": "19.1.0",

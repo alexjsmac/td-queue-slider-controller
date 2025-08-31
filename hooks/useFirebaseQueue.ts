@@ -46,6 +46,9 @@ export function useFirebaseQueue(): UseFirebaseQueueReturn {
   useEffect(() => {
     if (!sessionId) return;
 
+    // Initialize the queue system
+    firebaseQueueManager.initializeQueue();
+
     // Listen to queue state changes
     queueUnsubscribe.current = firebaseQueueManager.listenToQueueState((queueState: QueueState) => {
       setQueueLength(queueState.queueLength);
