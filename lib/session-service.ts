@@ -1,5 +1,5 @@
 import { firestore } from './firebase-config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import type { SessionValueHistory } from './types';
 
 /**
@@ -30,17 +30,6 @@ function calculateSessionStatistics(valueHistory: SessionValueHistory[]) {
   };
 }
 
-/**
- * Create compressed sample of value history to reduce storage size
- */
-function createSampledHistory(valueHistory: SessionValueHistory[]) {
-  return valueHistory
-    .filter((_, index) => index % 10 === 0) // Sample every 10th value
-    .map(h => ({
-      t: h.timestamp.getTime(),
-      v: h.value
-    }));
-}
 
 /**
  * Send session summary to Firestore when a user's turn ends
@@ -59,7 +48,6 @@ export async function saveSessionSummary(
 
     const sessionsCollection = collection(firestore, 'sessions');
     const statistics = calculateSessionStatistics(valueHistory);
-    const sampledHistory = createSampledHistory(valueHistory);
     
     await addDoc(sessionsCollection, {
       sessionId,
@@ -67,9 +55,7 @@ export async function saveSessionSummary(
       endTime,
       duration: Math.round((endTime.getTime() - startTime.getTime()) / 1000), // Duration in seconds
       dataPoints: valueHistory.length,
-      statistics,
-      sampledHistory,
-      timestamp: serverTimestamp()
+      statistics
     });
 
     console.log(`Session ${sessionId} summary saved to Firestore`);

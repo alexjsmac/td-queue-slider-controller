@@ -65,35 +65,10 @@ The TouchDesigner Slider Queue uses a **dual-database approach** with Firebase:
     "min": -0.8,
     "max": 0.9,
     "standardDeviation": 0.45
-  },
-  "sampledHistory": [
-    { "t": 1234567890000, "v": 0.1 },
-    { "t": 1234567891000, "v": 0.2 }
-  ],
-  "timestamp": "2024-08-31T10:00:30.000Z"
+  }
 }
 ```
 
-### `slider_values` Collection  
-```json
-{
-  "value": -0.5,
-  "normalizedValue": 0.25,
-  "sessionId": "uuid-string",
-  "timestamp": "2024-08-31T10:00:15.000Z",
-  "active": true
-}
-```
-
-### `current_value` Collection
-```json
-{
-  "value": -0.5,
-  "normalizedValue": 0.25, 
-  "sessionId": "uuid-string",
-  "timestamp": "2024-08-31T10:00:15.000Z"
-}
-```
 
 ## Realtime Database Rules
 
@@ -136,22 +111,15 @@ service cloud.firestore {
       allow read: if true;
     }
     
-    // Slider values with validation
-    match /slider_values/{document} {
-      allow write: if request.resource.data.value >= -1 
-        && request.resource.data.value <= 1;
+    // Session summaries - write from web app, read requires authentication
+    match /sessions/{sessionId} {
+      allow write: if true; // Web app can write session summaries
+      allow read: if request.auth != null; // Only authenticated users can read
     }
     
-    // Session summaries
-    match /sessions/{document} {
-      allow create: if true;
-      allow update, delete: if false;
-    }
-    
-    // Current value updates
-    match /current_value/{document} {
-      allow write: if request.resource.data.value >= -1 
-        && request.resource.data.value <= 1;
+    // System state - requires authentication
+    match /system/{document} {
+      allow read, write: if request.auth != null;
     }
   }
 }
@@ -165,16 +133,16 @@ service cloud.firestore {
    - Minimal data structure for performance
    - Direct TouchDesigner REST API access
 
-2. **Firestore**: Handles session summaries and historical data
+2. **Firestore**: Handles session summaries only
    - Better for complex queries and analytics
-   - Document-based structure for TouchDesigner
-   - Automatic data sampling to control costs
+   - Document-based structure for historical data
+   - Statistics-only approach to control costs
 
 ### Architecture Benefits
 1. **Queue Management**: Separate `activeUser` and `waitingUsers` for clear state management
 2. **Real-time Performance**: Current slider value updated in real-time
 3. **Data Persistence**: Session summaries stored permanently in Firestore
-4. **Cost Optimization**: Sampled history (every 10th value) reduces Firestore writes
+4. **Cost Optimization**: Statistics-only approach reduces Firestore writes
 5. **TouchDesigner Integration**: Multiple endpoints for different use cases
 
 ## TouchDesigner Integration Endpoints
@@ -190,11 +158,8 @@ GET https://PROJECT-ID-default-rtdb.firebaseio.com/queue.json
 
 ### Historical Data (Firestore)
 ```
-# Session summaries (for analytics)
+# Session summaries (for analytics) - requires authentication
 GET https://firestore.googleapis.com/v1/projects/PROJECT-ID/databases/(default)/documents/sessions
-
-# Latest slider value with metadata
-GET https://firestore.googleapis.com/v1/projects/PROJECT-ID/databases/(default)/documents/current_value
 ```
 
 ## Advantages Over Socket.IO Architecture

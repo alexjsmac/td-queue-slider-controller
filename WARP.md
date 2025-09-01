@@ -83,21 +83,20 @@ Required Firebase configuration:
 
 The system sends data to Firebase in two ways:
 
-1. **Real-time values** 
-   - **Realtime Database**: `sliderValues/current` (most recent value)
-   - **Firestore Collections**: `slider_values` and `current_value`
+1. **Real-time values** (Realtime Database: `sliderValues/current`)
    - Sent every time slider moves (throttled to 100ms)
    - Includes: value (-1 to 1), normalizedValue (0 to 1), sessionId, timestamp
+   - Public access for TouchDesigner integration
 
 2. **Session summaries** (Firestore Collection: `sessions`)
    - Sent when user's 30-second turn ends
-   - Includes: statistics (min/max/avg/stddev), sampled history (every 10th value), duration
+   - Includes: statistics (min/max/avg/stddev), duration, dataPoints count
+   - Requires authentication for access
 
 TouchDesigner should connect to:
 - **Realtime Database** `sliderValues/current` for live values (public access)
 - **Realtime Database** `queue` for queue state (public access)  
 - **Firestore** `sessions` collection for historical session data (requires authentication)
-- **Firestore** `current_value` collection for latest value with metadata (public access)
 
 ### TouchDesigner Authentication
 
@@ -148,17 +147,16 @@ See `TOUCHDESIGNER.md` for detailed integration guide.
 ### Data Persistence
 
 **Firebase Firestore Collections:**
-- `sessions`: session summaries with statistics and sampled history
-- `slider_values`: individual slider readings for real-time TouchDesigner consumption
-- `current_value`: latest slider value with metadata
+- `sessions`: session summaries with statistics only
 
 **Firebase Realtime Database:**
-- Live queue state and current slider values for real-time updates
+- `queue`: Live queue state and user management
+- `sliderValues/current`: Real-time slider values for TouchDesigner
 
 **Value Sampling:**
 - Client collects slider values at 100ms intervals during active sessions
 - Client throttles slider transmission at 100ms to prevent flooding
-- Session summaries saved to Firestore with sampled dataset (1/10th)
+- Session summaries saved to Firestore with statistics only (no raw data)
 
 ## Common Development Tasks
 
@@ -190,7 +188,7 @@ Open multiple browser tabs/windows to simulate multiple users:
 
 - Slider value transmission throttled to prevent Firebase quota exhaustion
 - Firebase writes are fire-and-forget to avoid blocking queue operations  
-- Session data sampled (every 10th value) before saving to Firestore to minimize storage costs
+- Session statistics saved to Firestore (no raw data) to minimize storage costs
 - React re-renders minimized through proper dependency arrays in hooks
 - Firebase Realtime Database provides efficient real-time updates
 - Static export enables CDN deployment for global performance

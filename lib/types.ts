@@ -58,11 +58,6 @@ export interface SessionSummary {
   duration: number;
   dataPoints: number;
   statistics: SessionStatistics;
-  sampledHistory: Array<{
-    t: number; // timestamp in milliseconds
-    v: number; // value
-  }>;
-  timestamp: object; // Firebase serverTimestamp
 }
 
 // Firebase Realtime Database structure types
@@ -88,6 +83,4 @@ export interface FirebaseSessionData {
     average: number;
     stdDev: number;
   };
-  sampleHistory: number[];
-  timestamp: object; // Firebase serverTimestamp
 }

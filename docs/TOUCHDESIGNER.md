@@ -264,7 +264,7 @@ The system implements tiered access:
 
 ### Firebase Quota Management
 - **Real-time endpoints** are optimized for frequent access
-- **Session history** is sampled and cached to minimize reads
+- **Session history** is cached to minimize reads
 - **Authentication** is token-based to reduce auth overhead
 
 ## 🛠️ Troubleshooting

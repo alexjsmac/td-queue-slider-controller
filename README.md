@@ -102,21 +102,20 @@ User → Web Interface → Firebase Realtime DB → Queue Management
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access
+    // Session summaries - write from web app, read requires authentication
+    match /sessions/{sessionId} {
+      allow write: if true; // Web app can write session summaries
+      allow read: if request.auth != null; // Only authenticated users can read
+    }
+    
+    // System state - requires authentication
+    match /system/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Default deny all other collections
     match /{document=**} {
-      allow read: if true;
-    }
-    
-    // Slider values with validation
-    match /slider_values/{document} {
-      allow write: if request.resource.data.value >= -1 
-        && request.resource.data.value <= 1;
-    }
-    
-    // Session summaries
-    match /sessions/{document} {
-      allow create: if true;
-      allow update, delete: if false;
+      allow read, write: if false;
     }
   }
 }
@@ -147,13 +146,13 @@ service cloud.firestore {
    }
    ```
 
-2. **Firestore Collections** - Historical data
-   - **`slider_values`** - All slider updates
-   - **`current_value`** - Latest value only
-   - **`sessions`** - Session summaries
+2. **Firestore Collection** - Historical data
+   - **`sessions`** - Session summaries with statistics
    ```json
    {
      "sessionId": "uuid",
+     "startTime": "2024-08-31T10:00:00.000Z",
+     "endTime": "2024-08-31T10:00:30.000Z",
      "duration": 30,          // Seconds
      "dataPoints": 300,       // Total samples
      "statistics": {
@@ -161,8 +160,7 @@ service cloud.firestore {
        "max": 0.9,
        "average": 0.1,
        "standardDeviation": 0.45
-     },
-     "sampledHistory": [...]  // Sampled values (every 10th)
+     }
    }
    ```
 
@@ -176,11 +174,11 @@ service cloud.firestore {
    # Poll every 50-100ms for real-time updates
    ```
 
-2. **Firestore REST API Method**:
+2. **Firestore Session History** (requires authentication):
    ```python
-   # For latest value:
-   # URL: https://firestore.googleapis.com/v1/projects/YOUR_PROJECT/databases/(default)/documents/current_value
-   # Poll every 100ms
+   # For session summaries:
+   # URL: https://firestore.googleapis.com/v1/projects/YOUR_PROJECT/databases/(default)/documents/sessions
+   # Requires Bearer token in Authorization header
    ```
 
 3. **Value Processing**:
