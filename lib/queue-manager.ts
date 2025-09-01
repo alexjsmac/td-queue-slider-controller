@@ -184,8 +184,21 @@ export class FirebaseQueueManager {
           
           console.log(`User ${activeUser.sessionId} deactivated`);
 
-          // Activate next user if queue not empty
-          setTimeout(() => this.activateNextUser(), 100);
+          // Check if queue is empty and reset slider if needed
+          const waitingUsersRef = ref(realtimeDb, 'queue/waitingUsers');
+          onValue(waitingUsersRef, async (waitingSnapshot) => {
+            const waitingUsers = waitingSnapshot.val();
+            const queueEmpty = !waitingUsers || Object.keys(waitingUsers).length === 0;
+            
+            if (queueEmpty) {
+              // No more users in queue, reset slider to 0
+              await updateSliderValue(0, 'system');
+              console.log('Last user deactivated and queue empty - reset slider value to 0');
+            } else {
+              // Activate next user if queue not empty
+              setTimeout(() => this.activateNextUser(), 100);
+            }
+          }, { onlyOnce: true });
         }
       }, { onlyOnce: true });
 
@@ -242,7 +255,7 @@ export class FirebaseQueueManager {
   }
 
   /**
-   * Update queue length counter
+   * Update queue length counter and reset slider value when queue is empty
    */
   private async updateQueueLength(): Promise<void> {
     try {
@@ -254,6 +267,20 @@ export class FirebaseQueueManager {
         
         const queueLengthRef = ref(realtimeDb, 'queue/queueLength');
         await set(queueLengthRef, count);
+        
+        // Reset slider value to 0 when queue becomes empty
+        if (count === 0) {
+          // Check if there's also no active user
+          const activeUserRef = ref(realtimeDb, 'queue/activeUser');
+          onValue(activeUserRef, async (activeSnapshot) => {
+            const activeUser = activeSnapshot.val();
+            if (!activeUser) {
+              // No users in queue and no active user, reset slider to 0
+              await updateSliderValue(0, 'system');
+              console.log('Queue empty - reset slider value to 0');
+            }
+          }, { onlyOnce: true });
+        }
       }, { onlyOnce: true });
       
     } catch (error) {
