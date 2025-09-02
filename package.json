@@ -9,6 +9,8 @@
     "lint": "next lint",
     "export": "next export",
     "clear-queue": "node scripts/clear-queue.js",
+    "reset-queue": "node scripts/reset-queue.js",
+    "admin-reset": "node scripts/admin-reset.js",
     "touchdesigner:token": "node scripts/generate-touchdesigner-token.js"
   },
   "dependencies": {
