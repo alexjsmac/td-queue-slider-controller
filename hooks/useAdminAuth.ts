@@ -24,7 +24,7 @@ export function useAdminAuth(): AdminAuthState {
   useEffect(() => {
     // Check if admin is already authenticated via localStorage
     const authToken = localStorage.getItem('admin_auth');
-    if (authToken === btoa(ADMIN_PASSWORD_HASH)) {
+    if (ADMIN_PASSWORD_HASH && authToken === btoa(ADMIN_PASSWORD_HASH)) {
       setIsAuthenticated(true);
     }
     setIsLoading(false);

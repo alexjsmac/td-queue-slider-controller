@@ -1,7 +1,7 @@
 import { realtimeDb, firestore } from './firebase-config';
 import { ref, remove, set, get, onValue, off } from 'firebase/database';
 import { collection, getDocs, deleteDoc, query, orderBy, limit } from 'firebase/firestore';
-import type { QueueState, SessionSummary } from './types';
+import type { SessionSummary } from './types';
 
 export interface QueueStatistics {
   activeUser: {
@@ -64,9 +64,10 @@ class AdminOperations {
             totalDuration += data.duration;
           }
         });
-      } catch (firestoreError: any) {
+      } catch (firestoreError) {
         // Handle Firestore permission errors gracefully
-        if (firestoreError.code === 'permission-denied') {
+        const error = firestoreError as { code?: string };
+        if (error.code === 'permission-denied') {
           console.warn('Cannot access Firestore sessions - using default values');
         } else {
           console.error('Firestore error:', firestoreError);
@@ -77,7 +78,11 @@ class AdminOperations {
 
       // Format waiting users
       const waitingUsers = queueData.waitingUsers 
-        ? Object.values(queueData.waitingUsers).map((user: any) => ({
+        ? Object.values(queueData.waitingUsers as Record<string, {
+            sessionId: string;
+            joinedAt: number;
+            position?: number;
+          }>).map((user) => ({
             sessionId: user.sessionId,
             joinedAt: user.joinedAt,
             position: user.position || 0,
@@ -143,10 +148,15 @@ class AdminOperations {
     const queueUnsub = onValue(queueRef, updateStats);
     const sliderUnsub = onValue(sliderRef, updateStats);
     
-    this.unsubscribes.push(
-      () => off(queueRef, 'value', queueUnsub as any),
-      () => off(sliderRef, 'value', sliderUnsub as any)
-    );
+    // Store unsubscribe functions
+    const unsubQueue = () => {
+      off(queueRef, 'value', updateStats);
+    };
+    const unsubSlider = () => {
+      off(sliderRef, 'value', updateStats);
+    };
+    
+    this.unsubscribes.push(unsubQueue, unsubSlider);
 
     // Initial update
     updateStats();
@@ -162,7 +172,7 @@ class AdminOperations {
   // Reset queue with options
   async resetQueue(options: ResetOptions = {}): Promise<void> {
     try {
-      const promises: Promise<any>[] = [];
+      const promises: Promise<void>[] = [];
 
       if (options.clearQueue !== false) {
         const queueRef = ref(realtimeDb, 'queue');
@@ -191,8 +201,9 @@ class AdminOperations {
         try {
           const systemRef = ref(realtimeDb, 'systemState');
           await remove(systemRef);
-        } catch (error: any) {
-          if (error.code === 'PERMISSION_DENIED') {
+        } catch (error) {
+          const err = error as { code?: string };
+          if (err.code === 'PERMISSION_DENIED') {
             console.warn('Cannot clear system state - requires authentication');
           } else {
             throw error;
@@ -231,9 +242,10 @@ class AdminOperations {
       });
       
       return sessions;
-    } catch (error: any) {
+    } catch (error) {
       // Handle permission errors gracefully
-      if (error.code === 'permission-denied') {
+      const err = error as { code?: string };
+      if (err.code === 'permission-denied') {
         console.warn('Cannot access sessions - authentication required');
         return [];
       }
@@ -264,12 +276,15 @@ class AdminOperations {
         await set(ref(realtimeDb, 'queue/queueLength'), newLength);
         
         // Reposition remaining users
-        const remainingUsers = Object.values(queueData.waitingUsers)
-          .filter((u: any) => u.sessionId !== sessionId)
-          .sort((a: any, b: any) => a.position - b.position);
+        const remainingUsers = Object.values(queueData.waitingUsers as Record<string, {
+            sessionId: string;
+            position: number;
+          }>)
+          .filter((u) => u.sessionId !== sessionId)
+          .sort((a, b) => a.position - b.position);
         
         for (let i = 0; i < remainingUsers.length; i++) {
-          const user = remainingUsers[i] as any;
+          const user = remainingUsers[i];
           await set(ref(realtimeDb, `queue/waitingUsers/${user.sessionId}/position`), i + 1);
         }
       }
