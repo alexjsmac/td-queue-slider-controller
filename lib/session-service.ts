@@ -51,8 +51,8 @@ export async function saveSessionSummary(
     
     await addDoc(sessionsCollection, {
       sessionId,
-      startTime,
-      endTime,
+      startTime: startTime.getTime(), // Save as timestamp for proper querying
+      endTime: endTime.getTime(), // Save as timestamp for proper querying
       duration: Math.round((endTime.getTime() - startTime.getTime()) / 1000), // Duration in seconds
       dataPoints: valueHistory.length,
       statistics

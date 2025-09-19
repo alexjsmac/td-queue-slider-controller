@@ -2,10 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Sessions data - write from web app, read requires authentication (TouchDesigner)
+    // Sessions data - web app can write/delete, TouchDesigner can read with auth
     match /sessions/{sessionId} {
-      allow write: if true; // Web app can write session summaries
-      allow read: if request.auth != null; // Only authenticated users (TouchDesigner) can read
+      allow write, delete: if true; // Web app can write and delete session summaries
+      allow read, list: if true; // Allow reading to enable deletion from admin dashboard
+      // Note: In production, consider restricting read access if session data is sensitive
     }
     
     // System state - requires authentication for both read/write

@@ -16,7 +16,7 @@ export interface QueueStatistics {
   }>;
   queueLength: number;
   totalSessionsToday: number;
-  averageSessionDuration: number;
+  averageSliderValue: number;  // Average of all session average values
   currentSliderValue: number | null;
 }
 
@@ -26,6 +26,11 @@ export interface ResetOptions {
   clearSessions?: boolean;
   clearSystemState?: boolean;
   initialize?: boolean;
+}
+
+export interface ResetResult {
+  success: boolean;
+  errors: string[];
 }
 
 class AdminOperations {
@@ -45,36 +50,44 @@ class AdminOperations {
       const sliderSnapshot = await get(sliderRef);
       const sliderData = sliderSnapshot.val();
 
-      // Get today's sessions from Firestore (with error handling)
-      let todaySessionCount = 0;
-      let totalDuration = 0;
+      // Get today's sessions from Firestore
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTimestamp = today.getTime();
       
-      try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      const sessionsRef = collection(firestore, 'sessions');
+      const sessionsSnapshot = await getDocs(sessionsRef);
+      
+      let todaySessionCount = 0;
+      let totalAverageValue = 0;
+      
+      sessionsSnapshot.forEach((doc) => {
+        const data = doc.data();
         
-        const sessionsRef = collection(firestore, 'sessions');
-        const sessionsSnapshot = await getDocs(sessionsRef);
-        
-        sessionsSnapshot.forEach((doc) => {
-          const data = doc.data() as SessionSummary;
-          const sessionDate = new Date(data.startTime);
-          if (sessionDate >= today) {
-            todaySessionCount++;
-            totalDuration += data.duration;
-          }
-        });
-      } catch (firestoreError) {
-        // Handle Firestore permission errors gracefully
-        const error = firestoreError as { code?: string };
-        if (error.code === 'permission-denied') {
-          console.warn('Cannot access Firestore sessions - using default values');
+        // Handle different timestamp formats
+        let startTimeMs: number;
+        if (data.startTime?.seconds) {
+          // Firestore Timestamp object
+          startTimeMs = data.startTime.seconds * 1000;
+        } else if (typeof data.startTime === 'number') {
+          // Already a millisecond timestamp
+          startTimeMs = data.startTime;
         } else {
-          console.error('Firestore error:', firestoreError);
+          // Skip if we can't parse the timestamp
+          return;
         }
-      }
+        
+        // Check if session is from today
+        if (startTimeMs >= todayTimestamp) {
+          todaySessionCount++;
+          // Add the session's average slider value
+          if (data.statistics?.average !== undefined) {
+            totalAverageValue += data.statistics.average;
+          }
+        }
+      });
 
-      const avgDuration = todaySessionCount > 0 ? totalDuration / todaySessionCount : 0;
+      const averageSliderValue = todaySessionCount > 0 ? totalAverageValue / todaySessionCount : 0;
 
       // Format waiting users
       const waitingUsers = queueData.waitingUsers 
@@ -112,7 +125,7 @@ class AdminOperations {
         waitingUsers,
         queueLength: queueData.queueLength || 0,
         totalSessionsToday: todaySessionCount,
-        averageSessionDuration: Math.round(avgDuration / 1000), // Convert to seconds
+        averageSliderValue: averageSliderValue,  // Average of session averages
         currentSliderValue,
       };
     } catch (error) {
@@ -123,7 +136,7 @@ class AdminOperations {
         waitingUsers: [],
         queueLength: 0,
         totalSessionsToday: 0,
-        averageSessionDuration: 0,
+        averageSliderValue: 0,
         currentSliderValue: null,
       };
     }
@@ -145,8 +158,8 @@ class AdminOperations {
     };
 
     // Listen to queue changes
-    const queueUnsub = onValue(queueRef, updateStats);
-    const sliderUnsub = onValue(sliderRef, updateStats);
+    onValue(queueRef, updateStats);
+    onValue(sliderRef, updateStats);
     
     // Store unsubscribe functions
     const unsubQueue = () => {
@@ -170,9 +183,10 @@ class AdminOperations {
   }
 
   // Reset queue with options
-  async resetQueue(options: ResetOptions = {}): Promise<void> {
+  async resetQueue(options: ResetOptions = {}): Promise<ResetResult> {
     try {
       const promises: Promise<void>[] = [];
+      const errors: string[] = [];
 
       if (options.clearQueue !== false) {
         const queueRef = ref(realtimeDb, 'queue');
@@ -190,6 +204,8 @@ class AdminOperations {
         const snapshot = await getDocs(sessionsRef);
         const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
         promises.push(...deletePromises);
+        
+        console.log(`Deleting ${snapshot.size} Firestore session(s)`);
 
         // Clear Realtime Database sessions
         const rtdbSessionsRef = ref(realtimeDb, 'sessions');
@@ -223,35 +239,57 @@ class AdminOperations {
           queueLength: 0,
         });
       }
+
+      return {
+        success: errors.length === 0,
+        errors
+      };
     } catch (error) {
       console.error('Error resetting queue:', error);
-      throw error;
+      return {
+        success: false,
+        errors: [`Reset failed: ${error}`]
+      };
     }
   }
 
   // Get recent sessions
   async getRecentSessions(limitCount: number = 10): Promise<SessionSummary[]> {
-    try {
-      const sessionsRef = collection(firestore, 'sessions');
-      const q = query(sessionsRef, orderBy('startTime', 'desc'), limit(limitCount));
-      const snapshot = await getDocs(q);
+    const sessionsRef = collection(firestore, 'sessions');
+    const q = query(sessionsRef, orderBy('startTime', 'desc'), limit(limitCount));
+    const snapshot = await getDocs(q);
+    
+    const sessions: SessionSummary[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
       
-      const sessions: SessionSummary[] = [];
-      snapshot.forEach((doc) => {
-        sessions.push({ ...(doc.data() as SessionSummary), sessionId: doc.id });
-      });
+      // Convert Firestore timestamps to milliseconds
+      let startTime: number;
+      let endTime: number;
       
-      return sessions;
-    } catch (error) {
-      // Handle permission errors gracefully
-      const err = error as { code?: string };
-      if (err.code === 'permission-denied') {
-        console.warn('Cannot access sessions - authentication required');
-        return [];
+      if (data.startTime?.seconds) {
+        startTime = data.startTime.seconds * 1000;
+      } else {
+        startTime = data.startTime;
       }
-      console.error('Error getting recent sessions:', error);
-      throw error;
-    }
+      
+      if (data.endTime?.seconds) {
+        endTime = data.endTime.seconds * 1000;
+      } else {
+        endTime = data.endTime;
+      }
+      
+      sessions.push({
+        sessionId: doc.id,
+        startTime,
+        endTime,
+        duration: data.duration || 0,
+        dataPoints: data.dataPoints || 0,
+        statistics: data.statistics || { average: 0, min: 0, max: 0, standardDeviation: 0 }
+      });
+    });
+    
+    return sessions;
   }
 
   // Remove specific user from queue

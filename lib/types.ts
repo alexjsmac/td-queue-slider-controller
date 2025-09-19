@@ -53,9 +53,9 @@ export interface SessionStatistics {
 
 export interface SessionSummary {
   sessionId: string;
-  startTime: Date;
-  endTime: Date;
-  duration: number;
+  startTime: number; // Timestamp in milliseconds
+  endTime: number;   // Timestamp in milliseconds
+  duration: number;  // Duration in seconds
   dataPoints: number;
   statistics: SessionStatistics;
 }

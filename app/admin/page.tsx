@@ -48,13 +48,25 @@ export default function AdminDashboard() {
         ? { clearQueue: true, clearSliderValues: true, initialize: true }
         : { clearQueue: true, clearSliderValues: true, clearSessions: true, initialize: true };
 
-      await adminOps.resetQueue(options);
-      setResetStatus(`✅ ${type === 'quick' ? 'Quick' : 'Full'} reset completed`);
-      setTimeout(() => setResetStatus(''), 3000);
+      const result = await adminOps.resetQueue(options);
+      
+      if (result.success) {
+        setResetStatus(`✅ ${type === 'quick' ? 'Quick' : 'Full'} reset completed`);
+      } else if (result.errors.length > 0) {
+        // Partial success with some errors
+        const errorMessages = result.errors.join('\n');
+        if (type === 'full' && result.errors.some(e => e.includes('Firestore sessions'))) {
+          setResetStatus(`⚠️ Reset partially completed. Note: ${result.errors[0]}`);
+        } else {
+          setResetStatus(`⚠️ Reset completed with warnings:\n${errorMessages}`);
+        }
+      }
+      
+      setTimeout(() => setResetStatus(''), 5000);
     } catch (error) {
       console.error('Reset error:', error);
-      setResetStatus('❌ Reset failed');
-      setTimeout(() => setResetStatus(''), 3000);
+      setResetStatus(`❌ Reset failed: ${error}`);
+      setTimeout(() => setResetStatus(''), 5000);
     } finally {
       setIsResetting(false);
     }
@@ -227,9 +239,19 @@ export default function AdminDashboard() {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Avg Session Duration</div>
-          <p className={`${styles.statValue} ${styles.statValueSmall}`}>
-            {stats?.averageSessionDuration || 0}s
+          <div className={styles.statLabel}>Avg Slider Value</div>
+          <p 
+            className={`${styles.statValue} ${styles.statValueSmall}`}
+            style={{
+              color: stats?.averageSliderValue && stats.averageSliderValue > 0.1 ? '#10b981' : 
+                     stats?.averageSliderValue && stats.averageSliderValue < -0.1 ? '#ef4444' : 
+                     '#1f2937'
+            }}
+          >
+            {stats?.averageSliderValue !== undefined ? 
+              (stats.averageSliderValue >= 0 ? '+' : '') + stats.averageSliderValue.toFixed(2) : 
+              '0.00'
+            }
           </p>
         </div>
       </div>
@@ -334,7 +356,24 @@ export default function AdminDashboard() {
             </p>
 
             {resetStatus && (
-              <div className={styles.controlDesc}>
+              <div 
+                className={styles.controlDesc}
+                style={{
+                  whiteSpace: 'pre-line',
+                  padding: '1rem',
+                  marginTop: '1rem',
+                  background: resetStatus.includes('❌') ? '#fee2e2' : 
+                              resetStatus.includes('⚠️') ? '#fef3c7' : 
+                              '#d1fae5',
+                  color: resetStatus.includes('❌') ? '#dc2626' : 
+                         resetStatus.includes('⚠️') ? '#d97706' : 
+                         '#065f46',
+                  borderRadius: '0.5rem',
+                  border: `1px solid ${resetStatus.includes('❌') ? '#fecaca' : 
+                          resetStatus.includes('⚠️') ? '#fde68a' : 
+                          '#a7f3d0'}`
+                }}
+              >
                 {resetStatus}
               </div>
             )}
