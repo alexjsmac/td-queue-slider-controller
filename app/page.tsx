@@ -66,9 +66,6 @@ export default function Home() {
               Concrete Canopy
             </span>
             <br />
-            <span className="text-white text-6xl tracking-wider">
-              Nuit Blanche London
-            </span>
             <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-purple-600 rounded-lg blur opacity-30 animate-pulse"></div>
           </h1>
           <p className="text-gray-400 text-lg tracking-wide mt-4">

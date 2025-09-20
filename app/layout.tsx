@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Concrete Canopy - Nuit Blanche London",
+  title: "Concrete Canopy",
   description: "Interactive queue-based slider control for Concrete Canopy projection mapping",
 };
 
