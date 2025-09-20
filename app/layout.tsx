@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TouchDesigner Slider Queue",
-  description: "Interactive queue-based slider control for TouchDesigner visualizations",
+  title: "Concrete Canopy - Nuit Blanche London",
+  description: "Interactive queue-based slider control for Concrete Canopy projection mapping",
 };
 
 export default function RootLayout({

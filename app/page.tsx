@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSocket } from '@/hooks/useFirebaseQueue';
 import { Slider } from '@/components/Slider';
+import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const {
@@ -54,10 +55,10 @@ export default function Home() {
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Interactive Slider Queue
+            Concrete Canopy - Nuit Blanche London 
           </h1>
           <p className="text-gray-600">
-            Take turns controlling the slider for Touch Designer visualizations
+            Take turns controlling the slider to influence the experience.
           </p>
         </header>
 
@@ -84,7 +85,7 @@ export default function Home() {
                     You&apos;re in control!
                   </h2>
                   <p className="text-sm text-green-700">
-                    Move the slider to send values to Touch Designer
+                    Move the slider to send values to the installation.
                   </p>
                 </div>
                 <div className="text-right">
@@ -156,7 +157,7 @@ export default function Home() {
               <div className="text-center">
                 <p className="text-gray-500 text-sm">
                   {isControlling 
-                    ? 'Enjoy your turn! The slider values are being sent to Touch Designer.'
+                    ? 'Enjoy your turn! The slider values are being sent to the installation.'
                     : `Please wait for your turn. ${queuePosition - 1} ${queuePosition - 1 === 1 ? 'person' : 'people'} ahead of you.`
                   }
                 </p>
@@ -192,6 +193,9 @@ export default function Home() {
           <p>Values range from -1 to 1 and are sent to Touch Designer in real-time.</p>
         </div>
       </div>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

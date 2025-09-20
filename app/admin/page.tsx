@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { adminOps, type QueueStatistics } from '@/lib/admin-operations';
+import { Footer } from '@/components/Footer';
 import styles from './admin.module.css';
 
 export default function AdminDashboard() {
@@ -381,6 +382,9 @@ export default function AdminDashboard() {
 
         </div>
       </div>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
