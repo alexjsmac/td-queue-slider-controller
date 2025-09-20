@@ -113,7 +113,7 @@ export default function AdminDashboard() {
     return (
       <div className={styles.loginContainer}>
         <div className={styles.loginCard}>
-          <p>Loading...</p>
+          <p style={{ color: '#06b6d4', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}>[SYSTEM] Loading...</p>
         </div>
       </div>
     );
@@ -130,24 +130,25 @@ export default function AdminDashboard() {
           {!isPasswordConfigured ? (
             <div style={{ 
               padding: '1rem', 
-              background: '#fef2f2', 
-              border: '1px solid #fecaca', 
-              borderRadius: '0.5rem',
-              marginBottom: '1rem' 
+              background: 'rgba(220, 38, 38, 0.1)', 
+              border: '1px solid rgba(220, 38, 38, 0.3)', 
+              marginBottom: '1rem',
+              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))'
             }}>
-              <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Admin Password Not Configured
+              <p style={{ color: '#ef4444', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                [ERROR] Admin Password Not Configured
               </p>
-              <p style={{ color: '#7f1d1d', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+              <p style={{ color: '#f87171', fontSize: '0.75rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}>
                 Please set the admin password in your environment:
               </p>
               <code style={{ 
                 display: 'block', 
                 padding: '0.5rem', 
-                background: '#fef2f2', 
-                borderRadius: '0.25rem',
+                background: 'rgba(31, 41, 55, 0.5)', 
+                border: '1px solid rgba(75, 85, 99, 0.5)',
                 fontSize: '0.75rem',
-                color: '#991b1b'
+                color: '#06b6d4',
+                fontFamily: 'monospace'
               }}>
                 NEXT_PUBLIC_ADMIN_PASSWORD_HASH=your_secure_password
               </code>
@@ -188,13 +189,13 @@ export default function AdminDashboard() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>TouchDesigner Admin Dashboard</h1>
+          <h1 className={styles.title}>Concrete Canopy Admin Dashboard</h1>
           <button onClick={logout} className={styles.logoutBtn}>
             Logout
           </button>
         </header>
-        <div style={{ textAlign: 'center', padding: '2rem', color: 'white' }}>
-          Loading queue statistics...
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#06b6d4', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          [SYSTEM] Loading queue statistics...
         </div>
       </div>
     );
@@ -204,7 +205,7 @@ export default function AdminDashboard() {
     <div className={styles.container}>
       {/* Header */}
       <header className={styles.header}>
-        <h1 className={styles.title}>TouchDesigner Admin Dashboard</h1>
+        <h1 className={styles.title}>Concrete Canopy Admin Dashboard</h1>
         <button onClick={logout} className={styles.logoutBtn}>
           Logout
         </button>
@@ -246,7 +247,7 @@ export default function AdminDashboard() {
             style={{
               color: stats?.averageSliderValue && stats.averageSliderValue > 0.1 ? '#10b981' : 
                      stats?.averageSliderValue && stats.averageSliderValue < -0.1 ? '#ef4444' : 
-                     '#1f2937'
+                     '#06b6d4'
             }}
           >
             {stats?.averageSliderValue !== undefined ? 
@@ -315,7 +316,7 @@ export default function AdminDashboard() {
             <div className={styles.sliderIndicator}>
               <div className={styles.sliderLabel}>Current Slider Value</div>
               <div className={styles.sliderValue}>
-                {stats.currentSliderValue.toFixed(3)}
+                {(stats.currentSliderValue >= 0 ? '+' : '') + stats.currentSliderValue.toFixed(3)}
               </div>
               <div className={styles.sliderBar}>
                 <div 
@@ -363,16 +364,19 @@ export default function AdminDashboard() {
                   whiteSpace: 'pre-line',
                   padding: '1rem',
                   marginTop: '1rem',
-                  background: resetStatus.includes('❌') ? '#fee2e2' : 
-                              resetStatus.includes('⚠️') ? '#fef3c7' : 
-                              '#d1fae5',
-                  color: resetStatus.includes('❌') ? '#dc2626' : 
-                         resetStatus.includes('⚠️') ? '#d97706' : 
-                         '#065f46',
-                  borderRadius: '0.5rem',
-                  border: `1px solid ${resetStatus.includes('❌') ? '#fecaca' : 
-                          resetStatus.includes('⚠️') ? '#fde68a' : 
-                          '#a7f3d0'}`
+                  background: resetStatus.includes('❌') ? 'rgba(220, 38, 38, 0.1)' : 
+                              resetStatus.includes('⚠️') ? 'rgba(245, 158, 11, 0.1)' : 
+                              'rgba(16, 185, 129, 0.1)',
+                  color: resetStatus.includes('❌') ? '#ef4444' : 
+                         resetStatus.includes('⚠️') ? '#f59e0b' : 
+                         '#10b981',
+                  border: `1px solid ${resetStatus.includes('❌') ? 'rgba(220, 38, 38, 0.3)' : 
+                          resetStatus.includes('⚠️') ? 'rgba(245, 158, 11, 0.3)' : 
+                          'rgba(16, 185, 129, 0.3)'}`,
+                  clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}
               >
                 {resetStatus}

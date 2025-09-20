@@ -1,7 +1,18 @@
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background similar to main app */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(147, 51, 234, 0.2), black, rgba(220, 38, 38, 0.2));
+  z-index: 0;
 }
 
 .header {
@@ -10,34 +21,60 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(17, 24, 39, 0.9);
   backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  position: relative;
+  z-index: 1;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }
 
 .title {
   font-size: 2rem;
-  font-weight: bold;
-  color: white;
+  font-weight: 900;
+  color: transparent;
+  background: linear-gradient(90deg, #ef4444 0%, #a855f7 50%, #06b6d4 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .logoutBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(239, 68, 68, 0.9);
+  background: linear-gradient(135deg, #dc2626, #ef4444);
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
 }
 
 .logoutBtn:hover {
-  background: rgba(239, 68, 68, 1);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 20px rgba(220, 38, 38, 0.4);
+}
+
+.logoutBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.logoutBtn:hover::before {
+  left: 100%;
 }
 
 .statsGrid {
@@ -45,35 +82,60 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .statCard {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(10px);
   padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, #06b6d4, transparent);
+  animation: scanline 3s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(250px); }
 }
 
 .statCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
 }
 
 .statLabel {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  font-family: monospace;
 }
 
 .statValue {
   font-size: 2rem;
   font-weight: bold;
-  color: #1f2937;
+  color: #06b6d4;
   margin: 0;
+  font-family: monospace;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
 .statValueSmall {
@@ -85,12 +147,14 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem;
-  background: #10b981;
+  background: linear-gradient(90deg, #10b981, #06b6d4);
   color: white;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  margin-top: 0.5rem;
+  margin-left: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
 
 .pulse {
@@ -100,14 +164,17 @@
   background: white;
   border-radius: 50%;
   animation: pulse 1.5s infinite;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
     opacity: 0.5;
+    transform: scale(0.8);
   }
 }
 
@@ -115,6 +182,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 1024px) {
@@ -124,19 +193,40 @@
 }
 
 .section {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(10px);
   padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a855f7, transparent);
+  animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 .sectionTitle {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
-  color: #1f2937;
+  color: #a855f7;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: monospace;
 }
 
 .queueList {
@@ -150,26 +240,50 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: #f9fafb;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  transition: all 0.2s;
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.queueItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #6b7280;
   transition: all 0.2s;
 }
 
 .queueItem:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: rgba(31, 41, 55, 0.8);
+  border-color: rgba(6, 182, 212, 0.5);
+}
+
+.queueItem:hover::before {
+  background: #06b6d4;
+  width: 3px;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
 .queueItemActive {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+  border: 1px solid #10b981;
+}
+
+.queueItemActive::before {
+  background: linear-gradient(to bottom, #10b981, #06b6d4);
+  width: 3px;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+  animation: pulse 2s infinite;
 }
 
 .queueItemActive .queuePosition,
 .queueItemActive .queueSession {
-  color: white;
+  color: #10b981;
 }
 
 .queueInfo {
@@ -179,15 +293,18 @@
 }
 
 .queuePosition {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: monospace;
 }
 
 .queueSession {
   font-family: monospace;
   font-size: 0.875rem;
-  color: #374151;
+  color: #06b6d4;
 }
 
 .queueTimer {
@@ -196,39 +313,47 @@
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: bold;
-  color: white;
+  color: #10b981;
+  font-family: monospace;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
 .removeBtn {
   padding: 0.5rem 1rem;
-  background: #ef4444;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
 
 .removeBtn:hover {
-  background: #dc2626;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
 }
 
 .skipBtn {
   padding: 0.5rem 1rem;
-  background: #f59e0b;
+  background: linear-gradient(135deg, #d97706, #f59e0b);
   color: white;
   border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
 
 .skipBtn:hover {
-  background: #d97706;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
 }
 
 .emptyQueue {
@@ -236,6 +361,9 @@
   padding: 3rem;
   color: #6b7280;
   font-style: italic;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .controls {
@@ -246,21 +374,38 @@
 
 .controlBtn {
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+
+.controlBtn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.controlBtn:hover::after {
+  left: 100%;
 }
 
 .controlBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
 }
 
 .controlBtn:active {
@@ -274,54 +419,74 @@
 }
 
 .dangerBtn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 .dangerBtn:hover {
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
 }
 
 .controlDesc {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   margin-top: 0.5rem;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .sliderIndicator {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: #f3f4f6;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.sliderIndicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+  animation: glow 3s ease-in-out infinite;
 }
 
 .sliderLabel {
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.75rem;
+  color: #9ca3af;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: monospace;
 }
 
 .sliderValue {
   font-size: 2rem;
   font-weight: bold;
-  color: #1f2937;
+  color: #06b6d4;
   font-family: monospace;
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
 .sliderBar {
   width: 100%;
   height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.5);
   margin-top: 0.5rem;
   overflow: hidden;
+  position: relative;
 }
 
 .sliderFill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
+  background: linear-gradient(90deg, #ef4444, #a855f7, #06b6d4);
   transition: width 0.1s ease-out;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
 }
 
 /* Login Form */
@@ -330,25 +495,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.loginContainer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(147, 51, 234, 0.2), black, rgba(220, 38, 38, 0.2));
+  z-index: 0;
 }
 
 .loginCard {
-  background: white;
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(10px);
   padding: 3rem;
-  border-radius: 1rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  box-shadow: 0 20px 60px rgba(147, 51, 234, 0.2);
   width: 100%;
   max-width: 400px;
+  position: relative;
+  z-index: 1;
+  clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+}
+
+.loginCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a855f7, transparent);
+  animation: glow 3s ease-in-out infinite;
 }
 
 .loginTitle {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 900;
   text-align: center;
   margin-bottom: 2rem;
-  color: #1f2937;
+  color: transparent;
+  background: linear-gradient(90deg, #ef4444, #a855f7, #06b6d4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .loginForm {
@@ -364,40 +559,69 @@
 }
 
 .inputLabel {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #374151;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: monospace;
 }
 
 .inputField {
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  color: #e5e7eb;
   font-size: 1rem;
   transition: all 0.2s;
+  font-family: monospace;
+}
+
+.inputField::placeholder {
+  color: #6b7280;
 }
 
 .inputField:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+  background: rgba(31, 41, 55, 0.8);
 }
 
 .loginBtn {
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+
+.loginBtn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.loginBtn:hover::after {
+  left: 100%;
 }
 
 .loginBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
 }
 
 .loginBtn:disabled {
@@ -408,9 +632,12 @@
 
 .errorMessage {
   padding: 0.75rem;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #ef4444;
+  font-size: 0.75rem;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: monospace;
 }

@@ -50,55 +50,77 @@ export default function Home() {
   const isControlling = isActive && queuePosition === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Animated background effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-red-900/20">
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
         {/* Header */}
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Concrete Canopy - Nuit Blanche London 
+          <h1 className="text-5xl font-black mb-4 relative inline-block">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-purple-500 to-cyan-500 animate-pulse">
+              Concrete Canopy
+            </span>
+            <br />
+            <span className="text-white text-6xl tracking-wider">
+              Nuit Blanche London
+            </span>
+            <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-purple-600 rounded-lg blur opacity-30 animate-pulse"></div>
           </h1>
-          <p className="text-gray-600">
-            Take turns controlling the slider to influence the experience.
+          <p className="text-gray-400 text-lg tracking-wide mt-4">
+            Take turns controlling the slider to influence the visuals and audio
           </p>
         </header>
 
         {/* Connection Status */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${
-              isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-            }`} />
-            <span className="text-sm text-gray-600">
-              {isConnected ? 'Connected' : 'Disconnected'}
+            <div className={`w-3 h-3 ${
+              isConnected ? 'bg-cyan-400 shadow-cyan-400/50' : 'bg-red-600 shadow-red-600/50'
+            } shadow-lg animate-pulse`} style={{ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+            <span className={`text-sm font-mono tracking-wider ${
+              isConnected ? 'text-cyan-400' : 'text-red-400'
+            }`}>
+              [{isConnected ? 'SYSTEM::ONLINE' : 'SYSTEM::OFFLINE'}]
             </span>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <div className="bg-gray-900/90 backdrop-blur-sm border border-purple-500/30 rounded-none p-8 mb-8 relative overflow-hidden">
+          {/* Glitch effect corners */}
+          <div className="absolute top-0 left-0 w-20 h-20 border-l-2 border-t-2 border-cyan-500/50"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 border-r-2 border-t-2 border-cyan-500/50"></div>
+          <div className="absolute bottom-0 left-0 w-20 h-20 border-l-2 border-b-2 border-cyan-500/50"></div>
+          <div className="absolute bottom-0 right-0 w-20 h-20 border-r-2 border-b-2 border-cyan-500/50"></div>
           {/* Status Banner */}
           {isControlling && (
-            <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg">
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-900/20 to-cyan-900/20 border border-cyan-500/50 relative">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-pulse"></div>
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-lg font-semibold text-green-800">
-                    You&apos;re in control!
+                  <h2 className="text-lg font-bold text-cyan-400 tracking-wider uppercase">
+                    [ACTIVE CONTROL]
                   </h2>
-                  <p className="text-sm text-green-700">
-                    Move the slider to send values to the installation.
+                  <p className="text-sm text-gray-400 font-mono">
+                    &gt; TRANSMITTING TO CONCRETE CANOPY_
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-800">
+                  <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">
                     {formatTime(remainingTime)}
                   </div>
-                  <div className="text-xs text-green-700">remaining</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Cycles Remaining</div>
                 </div>
               </div>
               {/* Progress bar */}
-              <div className="mt-3 h-2 bg-green-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-1 bg-gray-800 overflow-hidden">
                 <div 
-                  className="h-full bg-green-500 transition-all duration-1000 ease-linear"
+                  className="h-full bg-gradient-to-r from-cyan-500 to-green-500 transition-all duration-1000 ease-linear shadow-lg shadow-cyan-500/50"
                   style={{ width: `${(remainingTime / 30) * 100}%` }}
                 />
               </div>
@@ -106,15 +128,16 @@ export default function Home() {
           )}
 
           {isInQueue && (
-            <div className="mb-6 p-4 bg-blue-100 border border-blue-300 rounded-lg">
-              <h2 className="text-lg font-semibold text-blue-800">
-                You&apos;re in the queue
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/50 relative">
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+              <h2 className="text-lg font-bold text-purple-400 tracking-wider uppercase">
+                [QUEUE::POSITION]
               </h2>
-              <p className="text-sm text-blue-700">
-                Position: <span className="font-bold">{queuePosition}</span> of {queueLength}
+              <p className="text-sm text-gray-400 font-mono mt-2">
+                RANK: <span className="text-purple-400 font-bold text-xl">{queuePosition}</span> / {queueLength}
               </p>
-              <p className="text-xs text-blue-600 mt-1">
-                Estimated wait: {formatTime(queuePosition * 30)}
+              <p className="text-xs text-gray-500 mt-1 font-mono">
+                ETA: {formatTime(queuePosition * 30)}
               </p>
             </div>
           )}
@@ -133,32 +156,35 @@ export default function Home() {
             {showJoinButton && (
               <button
                 onClick={handleJoinQueue}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                className="group relative px-10 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 overflow-hidden"
               >
-                Join Queue
+                <span className="relative z-10">[ENTER QUEUE]</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg blur opacity-30 group-hover:opacity-100 transition-opacity animate-pulse"></div>
               </button>
             )}
 
             {showRejoinButton && (
               <div className="text-center">
-                <p className="text-gray-600 mb-4">
-                  Your turn has ended. Would you like to go again?
+                <p className="text-red-400 mb-4 font-mono uppercase tracking-wide">
+                  [SESSION::TERMINATED] - REINITIALIZE?
                 </p>
                 <button
                   onClick={handleRejoinQueue}
-                  className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                  className="group relative px-10 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-2xl hover:shadow-red-500/50 overflow-hidden"
                 >
-                  Rejoin Queue
+                  <span className="relative z-10">[REQUEUE]</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
               </div>
             )}
 
             {(isInQueue || isControlling) && (
               <div className="text-center">
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-400 text-sm font-mono">
                   {isControlling 
-                    ? 'Enjoy your turn! The slider values are being sent to the installation.'
-                    : `Please wait for your turn. ${queuePosition - 1} ${queuePosition - 1 === 1 ? 'person' : 'people'} ahead of you.`
+                    ? '> SIGNAL_TRANSMISSION::ACTIVE | CONCRETE_CANOPY_LINK::ESTABLISHED'
+                    : `> STANDBY_MODE | QUEUE_AHEAD::${queuePosition - 1} ${queuePosition - 1 === 1 ? 'USER' : 'USERS'}`
                   }
                 </p>
               </div>
@@ -167,30 +193,32 @@ export default function Home() {
         </div>
 
         {/* Queue Information */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Queue Information
+        <div className="bg-gray-900/90 backdrop-blur-sm border border-red-500/30 p-6 relative">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
+          <h3 className="text-lg font-bold text-red-400 mb-3 uppercase tracking-wider">
+            [SYSTEM::METRICS]
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-2xl font-bold text-gray-700">
-                {queueLength}
+            <div className="text-center p-3 bg-black/50 border border-gray-800">
+              <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">
+                {queueLength.toString().padStart(2, '0')}
               </div>
-              <div className="text-xs text-gray-500">People in Queue</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mt-2">USERS_IN_QUEUE</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-2xl font-bold text-gray-700">
-                {isControlling ? 'Active' : queuePosition > 0 ? `#${queuePosition}` : 'Not Queued'}
+            <div className="text-center p-3 bg-black/50 border border-gray-800">
+              <div className="text-3xl font-mono font-bold text-purple-400">
+                {isControlling ? 'LIVE' : queuePosition > 0 ? `#${queuePosition.toString().padStart(2, '0')}` : 'NULL'}
               </div>
-              <div className="text-xs text-gray-500">Your Status</div>
+              <div className="text-xs text-gray-500 uppercase tracking-wider mt-2">STATUS_CODE</div>
             </div>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Each person gets 30 seconds to control the slider.</p>
-          <p>Values range from -1 to 1 and are sent to Touch Designer in real-time.</p>
+        <div className="mt-8 text-center text-xs text-gray-600 font-mono uppercase tracking-wider">
+          <p className="mb-1">&lt; CYCLE_TIME::30_SECONDS &gt;</p>
+          <p>&lt; VALUE_RANGE::-1.000_TO_1.000 &gt;</p>
+          <p className="text-cyan-600 mt-2">[ REALTIME_TRANSMISSION::ENABLED ]</p>
         </div>
       </div>
       
