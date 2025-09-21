@@ -2,6 +2,7 @@
   "name": "touchdesigner-slider-queue",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +11,8 @@
     "export": "next export",
     "reset-queue": "node scripts/reset-queue.js",
     "admin-reset": "node scripts/admin-reset.js",
-    "touchdesigner:token": "node scripts/generate-touchdesigner-token.js"
+    "touchdesigner:token": "node scripts/generate-touchdesigner-token.js",
+    "analyze-trends": "node scripts/analyze-trends.js"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
