@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { firestore } from '@/lib/firebase-config';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
@@ -21,11 +21,51 @@ export default function AdminAnalytics() {
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<'bar' | 'line'>('bar');
+  const [viewMode, setViewMode] = useState<'bar' | 'line'>('line'); // Start with line view to show animation
+  const [lineAnimationComplete, setLineAnimationComplete] = useState(false);
+  const pathRef = useRef<SVGPathElement>(null);
   
   useEffect(() => {
     fetchSessions();
   }, []);
+  
+  // Animate line drawing when data loads and in line view
+  useEffect(() => {
+    if (!loading && sessions.length > 0 && viewMode === 'line' && pathRef.current) {
+      // Small delay to ensure smooth transition from loading state
+      const startDelay = setTimeout(() => {
+        // Reset animation
+        setLineAnimationComplete(false);
+        
+        if (pathRef.current) {
+          // Get the total length of the path
+          const pathLength = pathRef.current.getTotalLength();
+          
+          // Set up the path for animation
+          pathRef.current.style.strokeDasharray = `${pathLength}`;
+          pathRef.current.style.strokeDashoffset = `${pathLength}`;
+          
+          // Force browser to recalculate styles
+          pathRef.current.getBoundingClientRect();
+          
+          // Animate the line drawing with easing
+          pathRef.current.style.transition = 'stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          pathRef.current.style.strokeDashoffset = '0';
+          
+          // Mark animation as complete after it finishes
+          setTimeout(() => {
+            setLineAnimationComplete(true);
+            if (pathRef.current) {
+              pathRef.current.style.strokeDasharray = '';
+              pathRef.current.style.strokeDashoffset = '';
+            }
+          }, 2500);
+        }
+      }, 100);
+      
+      return () => clearTimeout(startDelay);
+    }
+  }, [loading, sessions, viewMode]);
 
   const fetchSessions = async () => {
     try {
@@ -116,8 +156,30 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 text-2xl animate-pulse">Loading analytics...</div>
+      <div className="min-h-screen bg-black text-white p-8 font-mono">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent mb-2">
+              SESSION ANALYTICS
+            </h1>
+            <div className="h-6 w-48 bg-gray-800 animate-pulse rounded"></div>
+          </div>
+          
+          {/* Skeleton stats cards */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="border border-gray-800 p-4 bg-gray-900/50">
+                <div className="h-4 w-20 bg-gray-800 animate-pulse rounded mb-2"></div>
+                <div className="h-8 w-24 bg-gray-800 animate-pulse rounded"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Skeleton graph */}
+          <div className="border border-gray-800 bg-gray-900/50 p-6 h-[500px] flex items-center justify-center">
+            <div className="text-cyan-400 text-xl animate-pulse">Loading session data...</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -231,6 +293,17 @@ export default function AdminAnalytics() {
             </defs>
 
             <g transform={`translate(${padding.left}, ${padding.top})`}>
+              {/* Y-axis label - positioned outside the main graph area */}
+              <text
+                x={-45}
+                y={plotHeight / 2}
+                fill="#666"
+                fontSize="12"
+                textAnchor="middle"
+                transform={`rotate(-90, -45, ${plotHeight / 2})`}
+              >
+                Slider Value
+              </text>
               {/* Grid lines */}
               {[-1, -0.5, 0, 0.5, 1].map(val => (
                 <g key={val}>
@@ -342,9 +415,13 @@ export default function AdminAnalytics() {
                   <polygon
                     points={createAreaPath()}
                     fill="url(#barGradient)"
-                    opacity={0.3}
+                    opacity={lineAnimationComplete ? 0.3 : 0}
+                    style={{
+                      transition: 'opacity 1s ease-out 1.5s'
+                    }}
                   />
                   <path
+                    ref={pathRef}
                     d={createLinePath()}
                     stroke="url(#lineGradient)"
                     strokeWidth={3}
@@ -354,6 +431,8 @@ export default function AdminAnalytics() {
                   {sessions.map((session, i) => {
                     const isHovered = hoveredIndex === i;
                     const avg = session.statistics?.average || 0;
+                    // Calculate delay for staggered appearance
+                    const delay = (i / sessions.length) * 2; // 2 seconds total animation
 
                     return (
                       <g key={i}>
@@ -364,10 +443,14 @@ export default function AdminAnalytics() {
                           fill="#00ffff"
                           stroke="white"
                           strokeWidth={2}
-                          opacity={isHovered ? 1 : 0.8}
+                          opacity={isHovered ? 1 : lineAnimationComplete ? 0.8 : 0}
                           onMouseEnter={() => setHoveredIndex(i)}
                           onMouseLeave={() => setHoveredIndex(null)}
-                          style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
+                          style={{ 
+                            transition: 'all 0.3s ease', 
+                            cursor: 'pointer',
+                            animation: lineAnimationComplete ? 'none' : `fadeIn 0.3s ease-out ${delay}s forwards`
+                          }}
                         />
                         {isHovered && (
                           <g>
@@ -438,17 +521,6 @@ export default function AdminAnalytics() {
                 </text>
               </g>
 
-              {/* Y-axis label */}
-              <text
-                x={-plotHeight / 2}
-                y={-40}
-                fill="#666"
-                fontSize="12"
-                textAnchor="middle"
-                transform={`rotate(-90, ${-40}, ${-plotHeight / 2})`}
-              >
-                ← Nature (-1) · · · Architecture (+1) →
-              </text>
             </g>
           </svg>
         </div>
@@ -477,6 +549,26 @@ export default function AdminAnalytics() {
           }
           100% {
             transform: translate(50px, 50px);
+          }
+        }
+        
+        @keyframes fadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          100% {
+            opacity: 0.8;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 0.8;
           }
         }
       `}</style>
