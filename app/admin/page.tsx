@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { adminOps, type QueueStatistics } from '@/lib/admin-operations';
 import { Footer } from '@/components/Footer';
+import Link from 'next/link';
 import styles from './admin.module.css';
 
 export default function AdminDashboard() {
@@ -206,9 +207,21 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className={styles.header}>
         <h1 className={styles.title}>Concrete Canopy Admin Dashboard</h1>
-        <button onClick={logout} className={styles.logoutBtn}>
-          Logout
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link 
+            href="/admin/analytics" 
+            className={styles.logoutBtn}
+            style={{
+              background: 'linear-gradient(135deg, #06b6d4, #9333ea)',
+              borderColor: '#06b6d4'
+            }}
+          >
+            📊 Analytics
+          </Link>
+          <button onClick={logout} className={styles.logoutBtn}>
+            Logout
+          </button>
+        </div>
       </header>
 
       {/* Statistics Grid */}
